@@ -39,7 +39,7 @@
             secondary
             strong
             round
-            @click.stop="getHotListsData(hotData.name)"
+            @click.stop="getHotListsData(hotData.name, true)"
           >
             <template #icon>
               <n-icon :component="Refresh" />
@@ -164,8 +164,16 @@ const loadingError = ref(false);
 const getHotListsData = async (name, isNew = false) => {
   try {
     loadingError.value = false;
+    listLoading.value = true;
+    hotListData.value = null;  // 清空当前模块数据
+    
     const item = store.newsArr.find((item) => item.name == name);
-    const result = await getHotLists(item.name, isNew, item.params);
+    if (!item) return;
+    
+    // 强制刷新当前模块的数据
+    const timestamp = new Date().getTime();
+    const result = await getHotLists(item.name, true, { t: timestamp });
+    
     if (result.code === 200) {
       listLoading.value = false;
       hotListData.value = result;
@@ -174,9 +182,11 @@ const getHotListsData = async (name, isNew = false) => {
       }
     } else {
       loadingError.value = true;
+      listLoading.value = false;
     }
   } catch (error) {
     loadingError.value = true;
+    listLoading.value = false;
   }
 };
 
