@@ -81,6 +81,7 @@
         </div>
       </Transition>
     </n-scrollbar>
+
     <template #footer>
       <Transition name="fade" mode="out-in">
         <template v-if="!hotListData">
@@ -217,25 +218,6 @@ const toList = () => {
   }
 };
 
-const checkListShow = () => {
-  const typeName = props.hotData.name;
-  const listId = "hot-list-" + typeName;
-  const listDom = document.getElementById(listId);
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting || entry.intersectionRatio > 0) {
-        console.log(`🚀 ${typeName} 即将进入视图，开始预加载`);
-        getHotListsData(props.hotData.name);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, {
-    rootMargin: '500px 0px',
-    threshold: 0
-  });
-  observer.observe(listDom);
-};
-
 watch(
   () => store.timeData,
   () => {
@@ -246,11 +228,7 @@ watch(
 );
 
 onMounted(() => {
-  if (props.hotData.order < 8) {
-    getHotListsData(props.hotData.name);
-  } else {
-    checkListShow();
-  }
+  getHotListsData(props.hotData.name);
 });
 </script>
 
