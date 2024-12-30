@@ -1,4 +1,3 @@
-
 <template>
   <n-card
     :header-style="{ padding: '16px' }"
@@ -165,7 +164,10 @@ const getHotListsData = async (name, isNew = false) => {
     loadingError.value = false;
     listLoading.value = true;
     hotListData.value = null;
-    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    if (isNew || retryCount > 0) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     
     const item = store.newsArr.find((item) => item.name == name);
     if (!item) return;
@@ -177,7 +179,7 @@ const getHotListsData = async (name, isNew = false) => {
       ...item.params
     };
 
-    const result = await getHotLists(item.name, true, params);
+    const result = await getHotLists(item.name, isNew, params);
     
     if (result && result.code === 200) {
       listLoading.value = false;
@@ -205,6 +207,7 @@ const getNewData = () => {
   const now = Date.now();
   if (now - lastClickTime.value > 60000) {
     listLoading.value = true;
+    retryCount = 0;
     getHotListsData(props.hotData.name, true);
     lastClickTime.value = now;
     localStorage.setItem(`${props.hotData.name}Btn`, now);
