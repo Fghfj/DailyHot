@@ -39,7 +39,7 @@
             secondary
             strong
             round
-            @click.stop="getHotListsData(hotData.name, true)"
+            @click.stop="getHotListsData(hotData.name)"
           >
             <template #icon>
               <n-icon :component="Refresh" />
@@ -152,7 +152,10 @@ const props = defineProps({
 });
 
 const updateTime = ref(null);
-const lastClickTime = ref(localStorage.getItem(`${props.hotData.name}Btn`) || 0);
+const lastClickTime = ref(
+  localStorage.getItem(`${props.hotData.name}Btn`) || 0
+);
+
 const hotListData = ref(null);
 const scrollbarRef = ref(null);
 const listLoading = ref(false);
@@ -165,41 +168,35 @@ const getHotListsData = async (name, isNew = false) => {
     listLoading.value = true;
     hotListData.value = null;
     
-    if (isNew || retryCount > 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    
     const item = store.newsArr.find((item) => item.name == name);
     if (!item) return;
-    
-    const params = {
-      t: new Date().getTime(),
-      force: true,
-      retry: retryCount,
-      ...item.params
-    };
 
-    const result = await getHotLists(item.name, isNew, params);
-    
-    if (result && result.code === 200) {
+    // 重试时完全重置并强制刷新
+    if (retryCount > 0) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const timestamp = new Date().getTime();
+      const result = await getHotLists(item.name, true, { t: timestamp });
       listLoading.value = false;
       hotListData.value = result;
       retryCount = 0;
+      return;
+    }
+
+    const result = await getHotLists(item.name, isNew, item.params);
+    if (result.code === 200) {
+      listLoading.value = false;
+      hotListData.value = result;
       if (scrollbarRef.value) {
         scrollbarRef.value.scrollTo({ position: "top", behavior: "smooth" });
       }
     } else {
-      throw new Error('加载失败');
+      loadingError.value = true;
+      listLoading.value = false;
     }
   } catch (error) {
     loadingError.value = true;
     listLoading.value = false;
-    
-    if (retryCount < 2) {
-      retryCount++;
-      await new Promise(resolve => setTimeout(resolve, 500));
-      getHotListsData(name, true);
-    }
+    retryCount++;
   }
 };
 
@@ -207,7 +204,6 @@ const getNewData = () => {
   const now = Date.now();
   if (now - lastClickTime.value > 60000) {
     listLoading.value = true;
-    retryCount = 0;
     getHotListsData(props.hotData.name, true);
     lastClickTime.value = now;
     localStorage.setItem(`${props.hotData.name}Btn`, now);
