@@ -1,3 +1,4 @@
+
 <template>
   <n-card
     :header-style="{ padding: '16px' }"
@@ -152,41 +153,51 @@ const props = defineProps({
 });
 
 const updateTime = ref(null);
-const lastClickTime = ref(
-  localStorage.getItem(`${props.hotData.name}Btn`) || 0
-);
-
+const lastClickTime = ref(localStorage.getItem(`${props.hotData.name}Btn`) || 0);
 const hotListData = ref(null);
 const scrollbarRef = ref(null);
 const listLoading = ref(false);
 const loadingError = ref(false);
+let retryCount = 0;
 
 const getHotListsData = async (name, isNew = false) => {
   try {
     loadingError.value = false;
     listLoading.value = true;
-    hotListData.value = null;  // 清空当前模块数据
+    hotListData.value = null;
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     const item = store.newsArr.find((item) => item.name == name);
     if (!item) return;
     
-    // 强制刷新当前模块的数据
-    const timestamp = new Date().getTime();
-    const result = await getHotLists(item.name, true, { t: timestamp });
+    const params = {
+      t: new Date().getTime(),
+      force: true,
+      retry: retryCount,
+      ...item.params
+    };
+
+    const result = await getHotLists(item.name, true, params);
     
-    if (result.code === 200) {
+    if (result && result.code === 200) {
       listLoading.value = false;
       hotListData.value = result;
+      retryCount = 0;
       if (scrollbarRef.value) {
         scrollbarRef.value.scrollTo({ position: "top", behavior: "smooth" });
       }
     } else {
-      loadingError.value = true;
-      listLoading.value = false;
+      throw new Error('加载失败');
     }
   } catch (error) {
     loadingError.value = true;
     listLoading.value = false;
+    
+    if (retryCount < 2) {
+      retryCount++;
+      await new Promise(resolve => setTimeout(resolve, 500));
+      getHotListsData(name, true);
+    }
   }
 };
 
