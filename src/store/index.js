@@ -7,14 +7,14 @@ export const mainStore = defineStore("mainData", {
       siteThemeAuto: true,
       defaultNewsArr: [
   {
-    label: "微博",
-    name: "weibo",
+    label: "今日头条",
+    name: "toutiao",
     order: 0,
     show: true,
   },
   {
-    label: "今日头条",
-    name: "toutiao",
+    label: "腾讯新闻",
+    name: "qq-news",
     order: 1,
     show: true,
   },
@@ -25,8 +25,8 @@ export const mainStore = defineStore("mainData", {
     show: true,
   },
   {
-    label: "腾讯新闻",
-    name: "qq-news",
+    label: "微博",
+    name: "weibo",
     order: 3,
     show: true,
   },
