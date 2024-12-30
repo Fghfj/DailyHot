@@ -7,8 +7,8 @@ export const mainStore = defineStore("mainData", {
       siteThemeAuto: true,
       defaultNewsArr: [
         {
-          label: "微博",
-          name: "weibo",
+          label: "虎扑",
+          name: "hupu",
           order: 0,
           show: true,
         },
