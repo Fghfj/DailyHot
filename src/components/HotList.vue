@@ -81,7 +81,6 @@
         </div>
       </Transition>
     </n-scrollbar>
-
     <template #footer>
       <Transition name="fade" mode="out-in">
         <template v-if="!hotListData">
@@ -175,11 +174,9 @@ const getHotListsData = async (name, isNew = false) => {
       }
     } else {
       loadingError.value = true;
-      $message.error(result.title + result.message);
     }
   } catch (error) {
     loadingError.value = true;
-    $message.error("热榜加载失败，请重试");
   }
 };
 
