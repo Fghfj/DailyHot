@@ -201,7 +201,7 @@ export const mainStore = defineStore("mainData", {
   {
     label: "快手",
     name: "kuaishou",
-    order: 31,
+    order: 32,
     show: true,
   },
 ],
