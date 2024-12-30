@@ -1,3 +1,4 @@
+
 <template>
   <n-card
     :header-style="{ padding: '16px' }"
@@ -173,9 +174,14 @@ const getHotListsData = async (name, isNew = false) => {
 
     // 重试时完全重置并强制刷新
     if (retryCount > 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 50));
+      localStorage.removeItem(`${name}_cache`);
       const timestamp = new Date().getTime();
-      const result = await getHotLists(item.name, true, { t: timestamp });
+      const result = await getHotLists(name, true, {
+        _t: timestamp,
+        force: true,
+        reset: true
+      });
       listLoading.value = false;
       hotListData.value = result;
       retryCount = 0;
