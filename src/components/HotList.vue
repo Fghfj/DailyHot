@@ -145,39 +145,30 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const store = mainStore();
 const props = defineProps({
-  // 热榜数据
   hotData: {
     type: Object,
     default: {},
   },
 });
 
-// 更新时间
 const updateTime = ref(null);
-
-// 刷新按钮数据
 const lastClickTime = ref(
   localStorage.getItem(`${props.hotData.name}Btn`) || 0
 );
 
-// 热榜数据
 const hotListData = ref(null);
 const scrollbarRef = ref(null);
 const listLoading = ref(false);
 const loadingError = ref(false);
 
-// 获取热榜数据
 const getHotListsData = async (name, isNew = false) => {
   try {
-    // hotListData.value = null;
     loadingError.value = false;
     const item = store.newsArr.find((item) => item.name == name);
     const result = await getHotLists(item.name, isNew, item.params);
-    // console.log(result);
     if (result.code === 200) {
       listLoading.value = false;
       hotListData.value = result;
-      // 滚动至顶部
       if (scrollbarRef.value) {
         scrollbarRef.value.scrollTo({ position: "top", behavior: "smooth" });
       }
@@ -191,23 +182,18 @@ const getHotListsData = async (name, isNew = false) => {
   }
 };
 
-// 获取最新数据
 const getNewData = () => {
   const now = Date.now();
   if (now - lastClickTime.value > 60000) {
-    // 点击事件
     listLoading.value = true;
     getHotListsData(props.hotData.name, true);
-    // 更新最后一次点击时间
     lastClickTime.value = now;
     localStorage.setItem(`${props.hotData.name}Btn`, now);
   } else {
-    // 不执行点击事件
     $message.info("请稍后再刷新");
   }
 };
 
-// 链接跳转
 const jumpLink = (data) => {
   if (!data.url || !data.mobileUrl) return $message.error("链接不存在");
   const url = window.innerWidth > 680 ? data.url : data.mobileUrl;
@@ -218,7 +204,6 @@ const jumpLink = (data) => {
   }
 };
 
-// 前往全部列表
 const toList = () => {
   if (props.hotData.name) {
     router.push({
@@ -232,24 +217,25 @@ const toList = () => {
   }
 };
 
-// 判断列表是否显示
 const checkListShow = () => {
   const typeName = props.hotData.name;
   const listId = "hot-list-" + typeName;
   const listDom = document.getElementById(listId);
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        console.log(`👀 ${typeName} 可见，开始加载`);
+      if (entry.isIntersecting || entry.intersectionRatio > 0) {
+        console.log(`🚀 ${typeName} 即将进入视图，开始预加载`);
         getHotListsData(props.hotData.name);
         observer.unobserve(entry.target);
       }
     });
+  }, {
+    rootMargin: '500px 0px',
+    threshold: 0
   });
   observer.observe(listDom);
 };
 
-// 实时改变更新时间
 watch(
   () => store.timeData,
   () => {
@@ -260,7 +246,11 @@ watch(
 );
 
 onMounted(() => {
-  checkListShow();
+  if (props.hotData.order < 8) {
+    getHotListsData(props.hotData.name);
+  } else {
+    checkListShow();
+  }
 });
 </script>
 
