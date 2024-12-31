@@ -198,12 +198,6 @@ export const mainStore = defineStore("mainData", {
     order: 31,
     show: true,
   },
-  {
-    label: "快手",
-    name: "kuaishou",
-    order: 32,
-    show: true,
-  },
 ],
       newsArr: [],
       linkOpenType: "open",
