@@ -172,19 +172,24 @@ const getHotListsData = async (name, isNew = false) => {
     const item = store.newsArr.find((item) => item.name == name);
     if (!item) return;
 
-    // 重试时完全重置并强制刷新
+    // 重试时添加随机参数和延迟
     if (retryCount > 0) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      localStorage.removeItem(`${name}_cache`);
-      const timestamp = new Date().getTime();
+      // 添加短暂延迟
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const result = await getHotLists(name, true, {
-        _t: timestamp,
-        force: true,
-        reset: true
+        _t: Date.now(), // 时间戳
+        random: Math.random(), // 随机数
+        retry: retryCount, // 重试次数
+        ...item.params
       });
+      
       listLoading.value = false;
       hotListData.value = result;
-      retryCount = 0;
+      if (result.updateTime) {
+        updateTime.value = formatTime(result.updateTime);
+      }
+      retryCount = 0; // 成功后重置重试次数
       return;
     }
 
@@ -194,6 +199,9 @@ const getHotListsData = async (name, isNew = false) => {
       hotListData.value = result;
       if (scrollbarRef.value) {
         scrollbarRef.value.scrollTo({ position: "top", behavior: "smooth" });
+      }
+      if (result.updateTime) {
+        updateTime.value = formatTime(result.updateTime);
       }
     } else {
       loadingError.value = true;
