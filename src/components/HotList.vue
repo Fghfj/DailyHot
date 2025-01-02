@@ -1,4 +1,3 @@
-
 <template>
   <n-card
     :header-style="{ padding: '16px' }"
@@ -172,24 +171,29 @@ const getHotListsData = async (name, isNew = false) => {
     const item = store.newsArr.find((item) => item.name == name);
     if (!item) return;
 
-    // 重试时添加随机参数和延迟
+    // 重试时，模拟刷新整个页面的效果
     if (retryCount > 0) {
-      // 添加短暂延迟
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // 完全重置状态，就像刷新页面一样
+      hotListData.value = null;
+      loadingError.value = false;
+      listLoading.value = true;
       
+      // 清除所有相关缓存
+      localStorage.removeItem(`${name}_cache`);
+      localStorage.removeItem(`${name}Btn`);
+      
+      // 短暂延迟，模拟页面刷新的过程
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 重新初始化并请求，就像新页面加载一样
       const result = await getHotLists(name, true, {
-        _t: Date.now(), // 时间戳
-        random: Math.random(), // 随机数
-        retry: retryCount, // 重试次数
-        ...item.params
+        _t: Date.now(),
+        fresh: true  // 标记这是一个全新请求
       });
       
       listLoading.value = false;
       hotListData.value = result;
-      if (result.updateTime) {
-        updateTime.value = formatTime(result.updateTime);
-      }
-      retryCount = 0; // 成功后重置重试次数
+      retryCount = 0;
       return;
     }
 
